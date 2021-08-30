@@ -24,6 +24,11 @@ namespace MySchoolApi
                 await context.Response.WriteAsync(exception.Message);
 
             }
+            catch (NotAuthorizeException exception)
+            {
+                context.Response.StatusCode = 403;
+                await context.Response.WriteAsync(exception.Message);
+            }
             catch (Exception exception)
             {
                 context.Response.StatusCode = 500;
