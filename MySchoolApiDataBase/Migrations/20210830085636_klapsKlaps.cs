@@ -1,0 +1,17 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+namespace MySchoolApiDataBase.Migrations
+{
+    public partial class klapsKlaps : Migration
+    {
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+
+        }
+
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+
+        }
+    }
+}
