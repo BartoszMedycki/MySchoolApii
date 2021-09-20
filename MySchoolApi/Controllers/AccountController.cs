@@ -30,6 +30,12 @@ namespace MySchoolApi.Controllers
             var token = accountRepository.GenerateJwtForStudent(dto);
             return Ok(token);
             
+        }  [HttpPost("login/employee")]
+        public ActionResult LoginEmployee([FromBody] LoginDto dto)
+        {
+            var token = accountRepository.GenerateJwtForEmployee(dto);
+            return Ok(token);
+            
         }
     }
    

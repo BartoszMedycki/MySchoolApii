@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MySchoolApiDataBase.DataModels.InDataModels;
 using MySchoolApiDataBase.DataModels.OutDataModels;
 using MySchoolApiDataBase.Entities;
 using System;
@@ -11,29 +12,47 @@ namespace MySchoolApiDataBase.Mappers
 {
    public class EmployeeMapper
     {
-        IMapper mapper;
+        IMapper OutMapper;
+        IMapper InMapper;
+        IMapper UpdateMapper;
         public EmployeeMapper()
         {
-            mapper = new MapperConfiguration(config =>
+            OutMapper = new MapperConfiguration(config =>
             {
                 config.CreateMap<Employee, EmployeeDataModel>().ForMember(Role=>Role.RoleName,dto =>dto.MapFrom(Role=>Role.Role.RoleName));
                 
 
             }).CreateMapper();
+
+            InMapper = new MapperConfiguration(config =>
+            {
+                config.CreateMap<CreateEmployeeDataModel, Employee>();
+
+
+            }).CreateMapper();
+
+            
+
         }
         
-        public EmployeeDataModel Map(Employee employeeDataModel)
+        public EmployeeDataModel OutDataMap(Employee employeeDataModel)
         {
-            return mapper.Map<EmployeeDataModel>(employeeDataModel);
+            return OutMapper.Map<EmployeeDataModel>(employeeDataModel);
         } 
-        public IEnumerable<EmployeeDataModel> Map(IEnumerable<Employee> employeeDataModel)
+        public IEnumerable<EmployeeDataModel> OutDataMap(IEnumerable<Employee> employeeDataModel)
         {
             List<EmployeeDataModel> listofEmployeeDto = new List<EmployeeDataModel>();
             foreach (var employee in employeeDataModel)
             {
-                listofEmployeeDto.Add(mapper.Map<EmployeeDataModel>(employee));
+                listofEmployeeDto.Add(OutMapper.Map<EmployeeDataModel>(employee));
             }
             return listofEmployeeDto;
         }
+
+        public Employee InDataMap(CreateEmployeeDataModel employeeDataModel)
+        {
+            return InMapper.Map<Employee>(employeeDataModel);
+        }
+        
     }
 }

@@ -14,12 +14,12 @@ namespace MySchoolApiDataBase.Entities
         public string Name { get; set; }
         public string Surename { get; set; }
         
-        public double Pesel { get; set; }
+        public string Pesel { get; set; }
         public string KeeperName { get; set; }
         public string KeeperSureName { get; set; }
-        public double KeeperTelephoneNumber { get; set; }
+        public string KeeperTelephoneNumber { get; set; }
         public int UserId { get; set; }
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } 
         public virtual List<Book> Books { get; set; } = new List<Book>();
 
         public int ClassID { get; set; }

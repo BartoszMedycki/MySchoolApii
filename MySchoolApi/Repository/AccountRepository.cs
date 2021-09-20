@@ -76,7 +76,8 @@ namespace MySchoolApiDataBase.Entities
 
         public string GenerateJwtForEmployee(LoginDto loginDto)
         {
-            var employeeByEmail = dbContext.Employees.Include(prop => prop.Role).FirstOrDefault(prop => prop.User.Email == loginDto.Email);
+            var employeeByEmail = dbContext.Employees.Include(prop => prop.Role).Include(prop=>prop.User)
+                .FirstOrDefault(prop => prop.User.Email == loginDto.Email);
                 
             if (employeeByEmail is null)
             {
@@ -94,7 +95,7 @@ namespace MySchoolApiDataBase.Entities
             {
             new Claim(ClaimTypes.NameIdentifier,employeeByEmail.Id.ToString()),
             new Claim(ClaimTypes.Name, $"{employeeByEmail.Name} {employeeByEmail.SureName}"),
-            new Claim(ClaimTypes.Role, $"{employeeByEmail.Role.RoleName}"),
+            new Claim(ClaimTypes.Role, $"Director"),
       
             };
 

@@ -8,11 +8,12 @@ namespace MySchoolApiDataBase.Entities
 {
     public interface IStudentRepository
     {
-        IEnumerable<StudentDataModel1> getAllStudents();
+        IEnumerable<StudentDataModel1> getAllStudents(ContextQuery query);
         IEnumerable<Student> GetStartStudents();
         public StudentDataModel1 GetStudentByNameAndSureName(string name, string surename);
-        public void DeleteStudent(int pesel);
+        public void DeleteStudent(string pesel);
         public void StudentRentBook(Student studentById, Book bookById);
+        public void StudentReturnBook(Student studentById, Book bookById);
         public void AddStudent(string className, CreateStudentDataModel studentDataModel);
         public IEnumerable<GradesFromTheSchoolObjectDataModel> getStudentsWithSubjectGrades(string className, string subjectName);
         public void AddGradeForStudent(int grade, string gradeDescription, string className, string subjectName,

@@ -13,27 +13,39 @@ using MySchoolApiDataBase.Entities;
 
 namespace MySchoolApi
 {
-    public class DoesTheSupervisingTeacherRequirementHandler : AuthorizationHandler<DoesTheSupervisingTeacherRequirement, Class>
+    public class DoesTheSupervisingTeacherRequirementHandler<T> : IAuthorizationHandler where T : IAuthorizationRequirement
     {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, DoesTheSupervisingTeacherRequirement requirement, Class employee)
+        public Task HandleAsync(AuthorizationHandlerContext context)
         {
             var Role = context.User.FindFirst(prop => prop.Type == ClaimTypes.Role).Value;
-            if (Role == "Director" && Role == "Admin")
+            
+            if (Role == RolesNames.Teacher.ToString())
             {
-                context.Succeed(requirement);
-            }
-            else if (Role == "Teacher")
-            {
-                var id = int.Parse(context.User.FindFirst(prop => prop.Type == ClaimTypes.NameIdentifier).Value);
-                if (id == employee.Id)
+                foreach (var req in context.Requirements.OfType<T>())
                 {
-                    context.Succeed(requirement);
+                    context.Succeed(req);
                 }
-                else context.Fail();
+                
             }
-            else context.Fail();
             return Task.CompletedTask;
         }
+
+        //protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, DoesTheSupervisingTeacherRequirement requirement, Class employee)
+        //{
+        //    var Role = context.User.FindFirst(prop => prop.Type == ClaimTypes.Role).Value;
+           
+        //    if (Role == "Teacher")
+        //    {
+        //        var id = int.Parse(context.User.FindFirst(prop => prop.Type == ClaimTypes.NameIdentifier).Value);
+        //        if (id == employee.Id)
+        //        {
+        //            context.Succeed(requirement);
+        //        }
+             
+        //    }
+           
+        //    return Task.CompletedTask;
+        //}
 
     }
 

@@ -7,5 +7,6 @@ namespace MySchoolApiDataBase.Entities
     {
 
         string GenerateJwtForStudent(LoginDto loginDto);
+        string GenerateJwtForEmployee(LoginDto loginDto);
     }
 }

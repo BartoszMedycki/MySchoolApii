@@ -18,7 +18,8 @@ namespace MySchoolApiDataBase.Validators.CreateDataModelsValidators
             RuleFor(prop => prop.Surename).NotEmpty();
             RuleFor(prop => prop.Pesel).Custom((value,context)=>
             {
-                var valueIsCorrect = value > 9999999999 && value <= 99999999999;
+              
+                var valueIsCorrect = value.ToString().Length > 10 && (long)value.ToString().Length <= 12;
                 if (!valueIsCorrect)
                 {
                     context.AddFailure("Pesel", "Incorrect pesel");

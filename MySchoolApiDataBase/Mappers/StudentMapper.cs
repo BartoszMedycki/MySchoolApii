@@ -28,6 +28,10 @@ namespace MySchoolApiDataBase.Mappers
             
                 config.CreateMap<Role, RoleDataModel>().ReverseMap();
                 config.CreateMap<Employee, EmployeeDataModel>().ForMember(Role => Role.RoleName, dto => dto.MapFrom(Role => Role.Role.RoleName));
+                config.CreateMap<Employee, EmployeeDataModel>().ForMember(Email=>Email.Email, dto => dto.MapFrom(Role => Role.User.Email)); 
+             
+               config.CreateMap<Student, StudentDataModel1>().ForMember(Email=>Email.Email, dto => dto.MapFrom(Role => Role.User.Email));
+ 
                 config.CreateMap<Note, NoteDataModel>().ReverseMap();
                 config.CreateMap<Rate, RateDataModel>().ReverseMap();
 

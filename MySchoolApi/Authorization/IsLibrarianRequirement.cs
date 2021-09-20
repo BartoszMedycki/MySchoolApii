@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 
 namespace MySchoolApi
 {
-    public class StudentIsOwnerRequirement : IAuthorizationRequirement
+    public class IsLibrarianRequirement : IAuthorizationRequirement
     {
-        Student student { get; set; }
-        public StudentIsOwnerRequirement(Student student)
+        Employee student { get; set; }
+        public IsLibrarianRequirement(Employee employee)
         {
-            this.student = student;
+            this.student = employee;
         }
-        public StudentIsOwnerRequirement()
+        public IsLibrarianRequirement()
         {
 
         }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MySchoolApiDataBase;
+using MySchoolApiDataBase.DataModels;
 using MySchoolApiDataBase.DataModels.InDataModels;
 using MySchoolApiDataBase.Entities;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace MySchoolApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+    
     public class EmployeeController : ControllerBase
     {
         
@@ -34,7 +35,7 @@ namespace MySchoolApi.Controllers
 
 
         [HttpPost]
-        [Authorize(Roles ="Director,Admin")]
+       //[Authorize(Roles ="Director,Admin")]
         public void AddEmployee([FromBody] CreateEmployeeDataModel employeeDataModel)
         {
             _employeeRepository.AddEmployee(employeeDataModel);
@@ -42,9 +43,9 @@ namespace MySchoolApi.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Director,Admin")]
-        public ActionResult<IEnumerable<Employee>> GetEmployees()
+        public ActionResult<IEnumerable<Employee>> GetEmployees([FromQuery]ContextQuery query)
         {
-            var AllEmployees = _employeeRepository.GetAllEmployees();
+            var AllEmployees = _employeeRepository.GetAllEmployees(query);
             return Ok(AllEmployees);
         }
 

@@ -15,7 +15,7 @@ namespace MySchoolApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize]
+   
     public class ClassController : ControllerBase
     {
 
@@ -60,7 +60,7 @@ namespace MySchoolApi.Controllers
             return Ok(result);
         }
         [HttpGet("Subjects/{subjectName}")]
-        [Authorize(Roles = "Director,Admin,Teacher")]
+      //  [Authorize(Roles = "Director,Admin,Teacher")]
         public ActionResult<IEnumerable<GradesFromTheSchoolObjectDataModel>> getStudentsWithGradesInTheSubjcets([FromHeader] string className,
             [FromRoute] string subjectName)
         {

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MySchoolApi;
+using MySchoolApiDataBase.DataModels;
 using MySchoolApiDataBase.DataModels.InDataModels;
 using MySchoolApiDataBase.DataModels.OutDataModels;
 using MySchoolApiDataBase.Mappers;
@@ -10,6 +11,7 @@ using MySchoolApiDataBase.Mappers.CreateDataMappers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,18 +20,18 @@ namespace MySchoolApiDataBase.Entities
 {
     public class EmployeeRepository : MainRepository<Employee>, IEmployeeRepository
     {
-        private readonly CreateEmployeeMapper _createEmployeeMapper;
+     
         private readonly EmployeeMapper _employeeMapper;
         private readonly ILogger<EmployeeRepository> logger;
         private readonly IPasswordHasher<Employee> passwordHasher;
         private readonly IAuthorizationService authorizationService;
         private readonly IUserContextService userContextService;
 
-        public EmployeeRepository(IServiceProvider service, CreateEmployeeMapper createEmployeeMapper,
+        public EmployeeRepository(IServiceProvider service, 
             EmployeeMapper employeeMapper, ILogger<EmployeeRepository> logger, IPasswordHasher<Employee> passwordHasher
             ,IAuthorizationService authorizationService, IUserContextService userContextService) : base(service)
         {
-            _createEmployeeMapper = createEmployeeMapper;
+           
             _employeeMapper = employeeMapper;
             this.logger = logger;
             this.passwordHasher = passwordHasher;
@@ -48,7 +50,7 @@ namespace MySchoolApiDataBase.Entities
                 if (!dbContext.Employees.Any(uniqueId => uniqueId.UniqueNumber == employeeDataModel.UniqueNumber))
                 {
                     var employeeRole = dbContext.Roles.FirstOrDefault(role => role.RoleName == employeeDataModel.RoleName);
-                    var mappedEmployee = _createEmployeeMapper.Map(employeeDataModel);
+                    var mappedEmployee = _employeeMapper.InDataMap(employeeDataModel);
                     mappedEmployee.Role = employeeRole;
 
                     
@@ -64,15 +66,35 @@ namespace MySchoolApiDataBase.Entities
                 }
             }
         }
-        public IEnumerable<EmployeeDataModel> GetAllEmployees()
+        public IEnumerable<EmployeeDataModel> GetAllEmployees(ContextQuery query)
         {
             List<EmployeeDataModel> listOfMappedEmployees = new List<EmployeeDataModel>();
-            var allEmployees = dbContext.Employees.Include(role => role.Role);
+            var allEmployees = dbContext.Employees.Include(role => role.Role).Where(prop=>prop.Id != 0);
             if (allEmployees != null)
             {
+                if (string.IsNullOrEmpty(query.SortBy))
+                {
+                    allEmployees = allEmployees.OrderBy(prop => prop.Name);
+                }
+                else if(!string.IsNullOrEmpty(query.SortBy))
+                {
+
+                    var columnSelector = new Dictionary<string, Expression<Func<Employee, object>>>
+               {
+                    {nameof(Employee.Name), prop=>prop.Name },
+                    {nameof(Employee.SureName), prop=>prop.SureName },
+                    {nameof(Employee.Id), prop=>prop.Id },
+                    {nameof(Employee.Role), prop=>prop.Role },
+
+                };
+                    var column = columnSelector[query.SortBy];
+                    allEmployees = query.SortDirection == SortDirection.ASC ? allEmployees.OrderBy(column) : allEmployees.OrderByDescending(column);
+                }
+                
+
                 foreach (var employee in allEmployees)
                 {
-                    listOfMappedEmployees.Add(_employeeMapper.Map(employee));
+                    listOfMappedEmployees.Add(_employeeMapper.OutDataMap(employee));
                 }
                 return listOfMappedEmployees;
             }
@@ -88,7 +110,7 @@ namespace MySchoolApiDataBase.Entities
                 {
                     throw new NotAuthorizeException("Unauthorize request");
                 }
-                var mappedEmployee = _employeeMapper.Map(employeeByUniqueCode);
+                var mappedEmployee = _employeeMapper.OutDataMap(employeeByUniqueCode);
                 return mappedEmployee;
             }
             else throw new NotFoundException("Employee not found");
@@ -100,23 +122,12 @@ namespace MySchoolApiDataBase.Entities
                                         .FirstOrDefault(find=>find.UniqueNumber == uniqueCode);
             if (employeeByUniqueNumber != null)
             {
-                if (employeeDataModel.Name != null)
-                {
+                
                     employeeByUniqueNumber.Name = employeeDataModel.Name;
-                }
-                if (employeeDataModel.SureName != null)
-                {
                     employeeByUniqueNumber.SureName = employeeDataModel.SureName;
-                }
-                if (employeeDataModel.ContactTelephoneNumber != 0)
-                {
                     employeeByUniqueNumber.ContactTelephoneNumber = employeeDataModel.ContactTelephoneNumber;
-                }
-                if (employeeDataModel.RoleName != null)
-                {
                     var role = dbContext.Roles.FirstOrDefault(cfg => cfg.RoleName == employeeDataModel.RoleName);
                     employeeByUniqueNumber.Role = role;
-                }
 
                 this.SaveChanges();
                 logger.LogInformation($"Employee with uniqueCode {uniqueCode} updated");
@@ -134,7 +145,7 @@ namespace MySchoolApiDataBase.Entities
                 {
                     throw new NotAuthorizeException("Unauthorize request");
                 }
-                var mappedEmployee = _employeeMapper.Map(employeeByUniqueCode);
+                var mappedEmployee = _employeeMapper.OutDataMap(employeeByUniqueCode);
                 return mappedEmployee;
             }
             else throw new NotFoundException("Employee not found");
@@ -148,6 +159,7 @@ namespace MySchoolApiDataBase.Entities
                 {
                     foreach (var employee in startEmployees)
                     {
+                        employee.User.PasswordHash = passwordHasher.HashPassword(employee, employee.User.PasswordHash);
                         dbContext.Employees.Add(employee);
                         this.SaveChanges();
                     }
@@ -157,6 +169,7 @@ namespace MySchoolApiDataBase.Entities
 
         public IEnumerable<Employee> GetStartEmployees()
         {
+            
             List<Employee> listOfStartEmployees = new List<Employee>()
         {
                 new Employee()
@@ -165,7 +178,7 @@ namespace MySchoolApiDataBase.Entities
                 SureName = "Medycka",
                 User = new User()
                 {
-                Email = "barmed553@wp.pl",
+                Email = "barmed55322@wp.pl",
                 PasswordHash = "admin123"
                 }
                 ,
@@ -180,7 +193,7 @@ namespace MySchoolApiDataBase.Entities
                 SureName = "Pietrzyk",
                  User = new User()
                 {
-                Email = "barmed553@wp.pl",
+                Email = "barmed55342@wp.pl",
                 PasswordHash = "admin123"
                 },
                 ContactTelephoneNumber = 791320123,
@@ -194,7 +207,8 @@ namespace MySchoolApiDataBase.Entities
                 SureName = "Wieszak",
                User = new User()
                 {
-                Email = "barmed553@wp.pl",
+                Email = "barmediko@wp.pl",
+                
                 PasswordHash = "admin123"
                 },
                 ContactTelephoneNumber = 791111333,

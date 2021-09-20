@@ -13,39 +13,27 @@ using MySchoolApiDataBase.Entities;
 
 namespace MySchoolApi
 {
-    public class StudentIsOwnerRequirementHandler : AuthorizationHandler<StudentIsOwnerRequirement, Student>
+    public class StudentIsOwnerRequirementHandler : AuthorizationHandler<StudentIsOwnerRequirement,Student>
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, StudentIsOwnerRequirement requirement, Student student)
         {
             var Role = context.User.FindFirst(prop => prop.Type == ClaimTypes.Role).Value;
-            if (Role == "Director" && Role == "Admin")
-            {
-                context.Succeed(requirement);
-            }
-            else if (Role == "Student")
+            if (Role == RolesNames.Student.ToString())
             {
                 var id = int.Parse(context.User.FindFirst(prop => prop.Type == ClaimTypes.NameIdentifier).Value);
                 if (id == student.Id)
                 {
                     context.Succeed(requirement);
                 }
-                else context.Fail();
+                
             }
-            else if (Role == "Teacher")
-            {
-                var id = int.Parse(context.User.FindFirst(prop => prop.Type == ClaimTypes.NameIdentifier).Value);
-                var superVisingTeacherId = student.Class.SupervisingTeacherId;
-                if (id == superVisingTeacherId)
-                {
-                    context.Succeed(requirement);
-                }
 
-            }
-            else context.Fail();
             return Task.CompletedTask;
         }
+    }
 
+    
     }
 
 
-}
+

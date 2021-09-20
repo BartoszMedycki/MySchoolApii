@@ -10,8 +10,8 @@ using MySchoolApiDataBase;
 namespace MySchoolApiDataBase.Migrations
 {
     [DbContext(typeof(MySchoolApiDbContext))]
-    [Migration("20210829223531_test")]
-    partial class test
+    [Migration("20210916153508_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -219,17 +219,19 @@ namespace MySchoolApiDataBase.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<double>("KeeperTelephoneNumber")
+                    b.Property<string>("KeeperTelephoneNumber")
+                        .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("float");
+                        .HasColumnType("nvarchar(11)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<double>("Pesel")
-                        .HasColumnType("float");
+                    b.Property<string>("Pesel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");

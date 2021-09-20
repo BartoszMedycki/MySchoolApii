@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MySchoolApiDataBase;
+using MySchoolApiDataBase.DataModels;
 using MySchoolApiDataBase.DataModels.InDataModels;
 using MySchoolApiDataBase.DataModels.OutDataModels;
 using MySchoolApiDataBase.Entities;
@@ -39,23 +40,23 @@ namespace MySchoolApi.Controllers
         }
         [HttpGet]
         [Authorize(Roles = "Librarian,Admin")]
-        public ActionResult<IEnumerable<BookDataModel>> GetAllBooks()
+        public ActionResult<IEnumerable<BookDataModel>> GetAllBooks([FromQuery]ContextQuery query)
         {
-            var result = libraryRepository.getAllBooks();
+            var result = libraryRepository.getAllBooks(query);
             return Ok(result);
         }
         [HttpGet("Available")]
         [Authorize(Roles = "Librarian,Admin")]
-        public ActionResult<IEnumerable<BookDataModel>> GetAllAvailableBooks()
+        public ActionResult<IEnumerable<BookDataModel>> GetAllAvailableBooks([FromQuery] ContextQuery query)
         {
-            var result = libraryRepository.getAvailableBooks();
+            var result = libraryRepository.getAvailableBooks(query);
             return Ok(result);
         } 
         [HttpGet("NotAvailable")]
         [Authorize(Roles = "Librarian,Admin")]
-        public ActionResult<IEnumerable<BookDataModel>> NotAvailable()
+        public ActionResult<IEnumerable<BookDataModel>> NotAvailable([FromQuery] ContextQuery query)
         {
-            var result = libraryRepository.getNotAvailableBooks();
+            var result = libraryRepository.getNotAvailableBooks(query);
             return Ok(result);
         }  
         [HttpGet("Students")]

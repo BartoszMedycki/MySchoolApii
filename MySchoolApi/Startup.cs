@@ -40,6 +40,7 @@ namespace MySchoolApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+          
             var authenticationSettings = new AuthenticationSettings();
 
             services.AddSingleton(authenticationSettings);
@@ -65,14 +66,36 @@ namespace MySchoolApi
             };
                 
             });
+
+
+
+
+            //services.AddScoped<IAuthorizationHandler, DoesTeachTheSubjectRequirementHandler>();
+
+
+
+            services.AddScoped<IAuthorizationHandler, IsAdminRequirementHandler<StudentIsOwnerRequirement>>();
+            services.AddScoped<IAuthorizationHandler, IsDirectorRequirementHandler<StudentIsOwnerRequirement>>();
             services.AddScoped<IAuthorizationHandler, StudentIsOwnerRequirementHandler>();
             services.AddScoped<IAuthorizationHandler, EmployeeIsOwnerRequirementHandler>();
-            services.AddScoped<IAuthorizationHandler, DoesTeachTheSubjectRequirementHandler>();
-            services.AddScoped<IAuthorizationHandler, DoesTheSupervisingTeacherRequirementHandler>();
+            services.AddScoped<IAuthorizationHandler, IsAdminRequirementHandler<EmployeeIsOwnerRequirement>>();
+            services.AddScoped<IAuthorizationHandler, IsDirectorRequirementHandler<EmployeeIsOwnerRequirement>>();
+
+            services.AddScoped<IAuthorizationHandler, DoesTheSupervisingTeacherRequirementHandler<DoesTeachTheSubjectRequirement>>();
+            services.AddScoped<IAuthorizationHandler, IsAdminRequirementHandler<DoesTeachTheSubjectRequirement>>();
+            services.AddScoped<IAuthorizationHandler, IsDirectorRequirementHandler<DoesTeachTheSubjectRequirement>>();
+
+            services.AddScoped<IAuthorizationHandler, DoesTheSupervisingTeacherRequirementHandler<DoesTeachTheSubjectRequirement>>();
+            
+            services.AddScoped<IAuthorizationHandler, IsAdminRequirementHandler<DoesTeachTheSubjectRequirement>>();
+            services.AddScoped<IAuthorizationHandler, IsDirectorRequirementHandler<DoesTeachTheSubjectRequirement>>();
+
+            services.AddScoped<IAuthorizationHandler, IsLibrarianRequirementHandelr<IsLibrarianRequirement>>();
+
             services.AddControllers().AddFluentValidation();
             services.AddDbContext<MySchoolApiDbContext>(options => options.UseSqlServer("Server = .;Database=MySchoolApiDataBase;Trusted_Connection=true;"));
             services.AddControllersWithViews().AddNewtonsoftJson(options =>options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
-            services.AddScoped<CreateEmployeeMapper>();
+         
             services.AddScoped<StudentMapper>();
             services.AddScoped<IValidator<CreateClassDataModel>, CreateClassDataModelValidator>();
             services.AddScoped<IValidator<CreateBookDataModel>, CreateBookDataModelValidator>();
@@ -80,7 +103,7 @@ namespace MySchoolApi
             services.AddScoped<IValidator<CreateSchoolSubjectDataModel>, CreateSchoolSubjectDataModelValidaotr>();
             services.AddScoped<IValidator<CreateStudentDataModel>, CreateStudentDataModelValidator>();
             services.AddScoped<IValidator<UpdateEmployeeDataModel1>, UpdateEmployeeDataModelValidator>();
-            services.AddScoped<CreateBookMapper>();
+         
             services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddScoped<BookMapper>();
             services.AddScoped<RateMapper>();
@@ -100,8 +123,11 @@ namespace MySchoolApi
             services.AddScoped<IPasswordHasher<Employee>, PasswordHasher<Employee>>();
             services.AddHttpContextAccessor();
             services.AddScoped<IUserContextService, UserContextService>();
-          
-        }
+
+
+
+              
+    }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider serviceProvider,

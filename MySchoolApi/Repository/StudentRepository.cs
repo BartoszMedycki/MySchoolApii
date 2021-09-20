@@ -10,6 +10,7 @@ using MySchoolApiDataBase.Mappers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace MySchoolApiDataBase.Entities
@@ -53,21 +54,49 @@ namespace MySchoolApiDataBase.Entities
                 {
                     foreach (var student in startStudents)
                     {
+                        student.User.PasswordHash = passwordHasher.HashPassword(student, student.User.PasswordHash);
                         dbContext.Students.Add(student);
                     }
                 }
             }
         }
-        public IEnumerable<StudentDataModel1> getAllStudents()
+        public IEnumerable<StudentDataModel1> getAllStudents(ContextQuery query)
         {
-            
+         
             var allStudents = dbContext.Students.Include(table => table.Books).Include(table => table.Class)
                     .ThenInclude(table=>table.SupervisingTeacher).ThenInclude(table => table.Role)
+                    .Include(table=>table.Class).ThenInclude(table=>table.SupervisingTeacher).ThenInclude(table=>table.User)
                     .Include(table => table.SchoolSubjects).ThenInclude(table=>table.Leader)
+                    .Include(table=>table.User)
                     .Include(table => table.Notes)
-                    .ThenInclude(table => table.Rates).Include(table => table.SchoolSubjects).ToList();
+                    .ThenInclude(table => table.Rates).Include(table => table.SchoolSubjects).Where(prop=>prop.Id!=0);
             if (allStudents != null)
             {
+
+
+
+                if (!string.IsNullOrEmpty(query.SortBy))
+                {
+                    var columntSelector = new Dictionary<string, Expression<Func<Student, object>>>
+                     {
+                          {nameof(Student.Name), prop=>prop.Name },
+                          {nameof(Student.Surename), prop=>prop.Surename },
+                          {nameof(Student.Id), prop=>prop.Id },
+                          {nameof(Student.Class), prop=>prop.Class },
+                          {nameof(Student.Pesel), prop=>prop.Pesel },
+
+                     };
+
+                    var selectColumn = columntSelector[query.SortBy];
+
+                    allStudents = query.SortDirection == SortDirection.ASC
+                           ? allStudents.OrderBy(selectColumn)
+                           : allStudents.OrderByDescending(selectColumn);
+                }
+                else if (string.IsNullOrEmpty(query.SortBy))
+                {
+                    allStudents = allStudents.OrderBy(prop => prop.Name);
+                }
                 var mappedStudents = mapper.Map(allStudents);
                 return mappedStudents;
             }
@@ -83,7 +112,9 @@ namespace MySchoolApiDataBase.Entities
                         .ThenInclude(table => table.Rates).Include(table => table.SchoolSubjects)
                         .FirstOrDefault(prop => prop.Name == name && prop.Surename == surename);
              var auth =  authorizationService.AuthorizeAsync(userContextService.Claims, student, new StudentIsOwnerRequirement()).Result;
-            if (!auth.Succeeded)
+             var SecoundAtuth =  authorizationService.AuthorizeAsync(userContextService.Claims, student, new DoesTheSupervisingTeacherRequirement()).Result;
+            
+            if (!auth.Succeeded || SecoundAtuth.Succeeded)
             {
                 throw new NotAuthorizeException("unauthorized request");
             }
@@ -105,7 +136,7 @@ namespace MySchoolApiDataBase.Entities
             studentById.Books.Remove(bookById);
             this.SaveChanges();
         }
-        public void DeleteStudent(int pesel)
+        public void DeleteStudent(string pesel)
         {
             logger.LogWarning("DeleteStudent method invoked");
             var studentByPesel = dbContext.Students.Include(table=>table.Notes)
@@ -158,34 +189,51 @@ namespace MySchoolApiDataBase.Entities
         public IEnumerable<GradesFromTheSchoolObjectDataModel> getStudentsWithSubjectGrades(string className, string subjectName)
         {
             var classByName = dbContext.Classes.Include(table => table.Students).ThenInclude(table => table.Notes)
-                    .ThenInclude(table => table.Rates).Include(table => table.SchoolSubjects).FirstOrDefault(prop => prop.ClassName == className);
+                    .ThenInclude(table => table.Rates)
+                    .Include(prop=>prop.Students).ThenInclude(prop=>prop.SchoolSubjects).ThenInclude(prop=>prop.Leader)
+                    .Include(table => table.SchoolSubjects).FirstOrDefault(prop => prop.ClassName == className);
             if (classByName != null)
             {
                 var students = classByName.Students;
                 if (students != null)
                 {
-                    List<GradesFromTheSchoolObjectDataModel> listOfGradesFromSchoolObjDto = new List<GradesFromTheSchoolObjectDataModel>();
-                    foreach (var student in students)
+
+                    var subject = classByName.SchoolSubjects.FirstOrDefault(prop => prop.SubcjectName == subjectName);
+                    var subjectLeader = subject.Leader;
+                   var authResult= authorizationService.AuthorizeAsync(userContextService.Claims, subjectLeader, new DoesTeachTheSubjectRequirement()).Result;
+                   var authResult2= authorizationService.AuthorizeAsync(userContextService.Claims, 
+                       classByName.SupervisingTeacher, new DoesTheSupervisingTeacherRequirement()).Result;
+                    if (authResult.Succeeded || authResult2.Succeeded)
                     {
-                        var subjectByName = student.Notes.FirstOrDefault(prop => prop.SubjectName == subjectName);
-                        if (subjectByName != null)
+                        List<GradesFromTheSchoolObjectDataModel> listOfGradesFromSchoolObjDto = new List<GradesFromTheSchoolObjectDataModel>();
+                        foreach (var student in students)
                         {
 
-                            listOfGradesFromSchoolObjDto.Add(new GradesFromTheSchoolObjectDataModel()
+
+                            var NotesFromSubject = student.Notes.FirstOrDefault(prop => prop.SubjectName == subjectName);
+
+                            if (NotesFromSubject != null)
                             {
-                                Name = student.Name,
-                                Surename = student.Surename,
-                                Rates = rateMapper.Map(subjectByName.Rates)
+
+                                listOfGradesFromSchoolObjDto.Add(new GradesFromTheSchoolObjectDataModel()
+                                {
+                                    Name = student.Name,
+                                    Surename = student.Surename,
+                                    Rates = rateMapper.Map(NotesFromSubject.Rates)
 
 
-                            });
-                           
+                                });
+
+                            }
+                            else throw new NotFoundException("Subjects  not found");
+
                         }
-                        else throw new NotFoundException("Subjects  not found");
 
+                        return listOfGradesFromSchoolObjDto;
                     }
+                    else throw new NotAuthorizeException("Unathorize request");
 
-                    return listOfGradesFromSchoolObjDto;
+                    
                 }
                 else throw new NotFoundException("Student not found");
                
@@ -263,14 +311,14 @@ namespace MySchoolApiDataBase.Entities
             Surename = "Grosicki",
             User = new User()
             {
-              Email = "barmed553@wp.pl",
+              Email = "barmed553123@wp.pl",
               PasswordHash = "admin123",
             },
           
-            Pesel = 666444333,
+            Pesel = "666444333",
             KeeperName = "Wojtek",
             KeeperSureName = " Gola",
-            KeeperTelephoneNumber = 568489976,
+            KeeperTelephoneNumber = "568489976",
             Class = Class1A,
             SchoolSubjects = listOfClassSubject,
             Notes =listOfNotes,

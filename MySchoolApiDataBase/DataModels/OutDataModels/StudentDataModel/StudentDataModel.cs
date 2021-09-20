@@ -9,9 +9,9 @@ namespace MySchoolApiDataBase.DataModels.OutDataModels
         public string Name { get; set; }
         public string Surename { get; set; }
         public string Email { get; set; }
-        public double Pesel { get; set; }
+        public string Pesel { get; set; }
         public string KeeperName { get; set; }
-        public int KeeperTelephoneNumber { get; set; }
+        public string KeeperTelephoneNumber { get; set; }
         public virtual List<BookDataModelForStudentDataModel> Books { get; set; } 
 
         public virtual ClassDataModelForStudentDataModel Class { get; set; }
